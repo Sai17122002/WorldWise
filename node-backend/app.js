@@ -3,6 +3,8 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const path = require("path");
 const fs = require("fs");
+const port = process.env.PORT || 3000;
+// const cors = require("cors");
 
 const placesRouter = require("./routes/places-routes");
 const userRoutes = require("./routes/users-routes");
@@ -10,6 +12,8 @@ const userRoutes = require("./routes/users-routes");
 const HttpError = require("./models/http-error");
 
 const app = express();
+
+
 
 app.use(bodyParser.json());
 
