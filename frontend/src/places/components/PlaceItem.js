@@ -7,14 +7,16 @@ import Map from '../../shared/components/UIElements/Map';
 import ErrorModal from '../../shared/components/UIElements/ErrorModal';
 import LoadingSpinner from '../../shared/components/UIElements/LoadingSpinner';
 import { AuthContext } from '../../shared/context/auth-context';
-import { useHttpClient } from '../../shared/hooks/http-hook';
 import './PlaceItem.css';
 
 const PlaceItem = props => {
-  const { isLoading, error, sendRequest, clearError } = useHttpClient();
   const auth = useContext(AuthContext);
   const [showMap, setShowMap] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isLoading,setIsLoading] = useState(false);
+  const [error,setError]=useState(null);
+
+  const clearError=()=>setError(null);
 
   const openMapHandler = () => setShowMap(true);
 
@@ -31,16 +33,27 @@ const PlaceItem = props => {
   const confirmDeleteHandler = async () => {
     setShowConfirmModal(false);
     try {
-      await sendRequest(
-        process.env.REACT_APP_BACKEND_URL+`/api/places/${props.id}`,
-        'DELETE',
-        null,
-        {
+      const response = await fetch(process.env.REACT_APP_BACKEND_URL+`/api/places/${props.id}`, {
+        method: 'DELETE',
+        body: null,
+        headers: {
           Authorization: 'Bearer ' + auth.token
-        }
-      );
+        },
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(responseData.message);
+      }
+
+      setIsLoading(false);
       props.onDelete(props.id);
-    } catch (err) {}
+    } catch (err) {
+      setError(err.message);
+      setIsLoading(false);
+      throw err;
+    }
   };
 
   return (

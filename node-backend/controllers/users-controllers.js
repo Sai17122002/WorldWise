@@ -111,7 +111,7 @@ const login = async (req, res, next) => {
     );
     return next(error);
   }
-  
+
   if (!existingUser) {
     const error = new HttpError(
       "Invalid credentials, could not log you in.",
@@ -144,7 +144,7 @@ const login = async (req, res, next) => {
     token = jwt.sign(
       { userId: existingUser.id, email: existingUser.email },
       process.env.JWT_KEY,
-      { expiresIn: "0.01h" }
+      { expiresIn: "1h" }
     );
   } catch (err) {
     const error = new HttpError(

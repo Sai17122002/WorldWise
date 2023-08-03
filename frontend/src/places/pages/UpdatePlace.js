@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext,useCallback } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 
 import Input from '../../shared/components/FormElements/Input';
@@ -11,13 +11,16 @@ import {
   VALIDATOR_MINLENGTH
 } from '../../shared/util/validators';
 import { useForm } from '../../shared/hooks/form-hook';
-import { useHttpClient } from '../../shared/hooks/http-hook';
 import { AuthContext } from '../../shared/context/auth-context';
 import './PlaceForm.css';
 
 const UpdatePlace = () => {
   const auth = useContext(AuthContext);
-  const { isLoading, error, sendRequest, clearError } = useHttpClient();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const clearError = () => {
+    setError(null);
+  };
   const [loadedPlace, setLoadedPlace] = useState();
   const placeId = useParams().placeId;
   const history = useHistory();
@@ -35,7 +38,33 @@ const UpdatePlace = () => {
     },
     false
   );
+  const sendRequest = useCallback(
+    async (url, method = 'GET', body = null, headers = {}) => {
+      setIsLoading(true);
 
+      try {
+        const response = await fetch(url, {
+          method,
+          body,
+          headers,
+        });
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+          throw new Error(responseData.message);
+        }
+
+        setIsLoading(false);
+        return responseData;
+      } catch (err) {
+        setError(err.message);
+        setIsLoading(false);
+        throw err;
+      }
+    },
+    []
+  );
   useEffect(() => {
     const fetchPlace = async () => {
       try {

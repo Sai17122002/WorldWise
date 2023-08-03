@@ -1,60 +1,93 @@
-import React, { useContext } from 'react';
-import { useHistory } from 'react-router-dom';
+import React, { useContext, useCallback, useState } from "react";
+import { useHistory } from "react-router-dom";
 
-import Input from '../../shared/components/FormElements/Input';
-import Button from '../../shared/components/FormElements/Button';
-import ErrorModal from '../../shared/components/UIElements/ErrorModal';
-import LoadingSpinner from '../../shared/components/UIElements/LoadingSpinner';
-import ImageUpload from '../../shared/components/FormElements/ImageUpload';
+import Input from "../../shared/components/FormElements/Input";
+import Button from "../../shared/components/FormElements/Button";
+import ErrorModal from "../../shared/components/UIElements/ErrorModal";
+import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
+import ImageUpload from "../../shared/components/FormElements/ImageUpload";
 import {
   VALIDATOR_REQUIRE,
-  VALIDATOR_MINLENGTH
-} from '../../shared/util/validators';
-import { useForm } from '../../shared/hooks/form-hook';
-import { useHttpClient } from '../../shared/hooks/http-hook';
-import { AuthContext } from '../../shared/context/auth-context';
-import './PlaceForm.css';
+  VALIDATOR_MINLENGTH,
+} from "../../shared/util/validators";
+import { useForm } from "../../shared/hooks/form-hook";
+import { AuthContext } from "../../shared/context/auth-context";
+import "./PlaceForm.css";
 
 const NewPlace = () => {
   const auth = useContext(AuthContext);
-  const { isLoading, error, sendRequest, clearError } = useHttpClient();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const clearError = () => {
+    setError(null);
+  };
   const [formState, inputHandler] = useForm(
     {
       title: {
-        value: '',
-        isValid: false
+        value: "",
+        isValid: false,
       },
       description: {
-        value: '',
-        isValid: false
+        value: "",
+        isValid: false,
       },
       address: {
-        value: '',
-        isValid: false
+        value: "",
+        isValid: false,
       },
       image: {
         value: null,
-        isValid: false
-      }
+        isValid: false,
+      },
     },
     false
   );
 
   const history = useHistory();
+  const sendRequest = useCallback(
+    async (url, method = "GET", body = null, headers = {}) => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(url, {
+          method,
+          body,
+          headers,
+        });
 
-  const placeSubmitHandler = async event => {
+        const responseData = await response.json();
+
+        if (!response.ok) {
+          throw new Error(responseData.message);
+        }
+
+        setIsLoading(false);
+        return responseData;
+      } catch (err) {
+        setError(err.message);
+        setIsLoading(false);
+        throw err;
+      }
+    },
+    []
+  );
+  const placeSubmitHandler = async (event) => {
     event.preventDefault();
     try {
       const formData = new FormData();
-      formData.append('title', formState.inputs.title.value);
-      formData.append('description', formState.inputs.description.value);
-      formData.append('address', formState.inputs.address.value);
-      formData.append('creator', auth.userId);
-      formData.append('image', formState.inputs.image.value);
-      await sendRequest(process.env.REACT_APP_BACKEND_URL+'/api/places', 'POST', formData, {
-        Authorization: 'Bearer ' + auth.token
-      });
-      history.push('/');
+      formData.append("title", formState.inputs.title.value);
+      formData.append("description", formState.inputs.description.value);
+      formData.append("address", formState.inputs.address.value);
+      formData.append("creator", auth.userId);
+      formData.append("image", formState.inputs.image.value);
+      await sendRequest(
+        process.env.REACT_APP_BACKEND_URL + "/api/places",
+        "POST",
+        formData,
+        {
+          Authorization: "Bearer " + auth.token,
+        }
+      );
+      history.push("/");
     } catch (err) {}
   };
 

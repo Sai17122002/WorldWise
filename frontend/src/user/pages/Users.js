@@ -1,25 +1,44 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
-import UsersList from '../components/UsersList';
-import ErrorModal from '../../shared/components/UIElements/ErrorModal';
-import LoadingSpinner from '../../shared/components/UIElements/LoadingSpinner';
-import { useHttpClient } from '../../shared/hooks/http-hook';
+import UsersList from "../components/UsersList";
+import ErrorModal from "../../shared/components/UIElements/ErrorModal";
+import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
 
 const Users = () => {
-  const { isLoading, error, sendRequest, clearError } = useHttpClient();
   const [loadedUsers, setLoadedUsers] = useState();
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const clearError = () => {
+    setError(false);
+  };
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const responseData = await sendRequest(
-          `${process.env.REACT_APP_BACKEND_URL}/api/users`
+        const response = await fetch(
+          `${process.env.REACT_APP_BACKEND_URL}/api/users`,
+          {
+            method: "GET",
+            body: null,
+            headers: {},
+          }
         );
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+          throw new Error(responseData.message);
+        }
+
+        setIsLoading(false);
         setLoadedUsers(responseData.users);
-      } catch (err) {}
+      } catch (err) {
+        setError(err.message);
+        setIsLoading(false);
+        throw err;
+      }
     };
     fetchUsers();
-  }, [sendRequest]);
+  }, [loadedUsers]);
 
   return (
     <React.Fragment>
