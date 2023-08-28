@@ -1,4 +1,3 @@
-const { validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -20,15 +19,7 @@ const getUsers = async (req, res, next) => {
 };
 
 const signup = async (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return next(
-      new HttpError("Invalid inputs passed, please check your data.", 422)
-    );
-  }
-
-  const { name, email, password } = req.body;
-
+  const { name, email, password, image } = req.body;
   let existingUser;
   try {
     existingUser = await User.findOne({ email: email });
@@ -62,11 +53,10 @@ const signup = async (req, res, next) => {
   const createdUser = new User({
     name,
     email,
-    image: req.file.path,
+    image,
     password: hashedPassword,
     places: [],
   });
-
   try {
     await createdUser.save();
   } catch (err) {
@@ -93,7 +83,7 @@ const signup = async (req, res, next) => {
   }
 
   res
-    .status(201)
+    .status(200)
     .json({ userId: createdUser.id, email: createdUser.email, token: token });
 };
 
@@ -107,7 +97,7 @@ const login = async (req, res, next) => {
   } catch (err) {
     const error = new HttpError(
       "Logging in failed, please try again later.",
-      500
+      401
     );
     return next(error);
   }
@@ -115,9 +105,9 @@ const login = async (req, res, next) => {
   if (!existingUser) {
     const error = new HttpError(
       "Invalid credentials, could not log you in.",
-      401
+      500
     );
-    return next(error);
+    res.status(404).json("Invalid credentials, could not log you in");
   }
 
   let isValidPassword = false;

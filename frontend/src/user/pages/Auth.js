@@ -14,6 +14,7 @@ import {
 import { useForm } from "../../shared/hooks/form-hook";
 import { AuthContext } from "../../shared/context/auth-context";
 import "./Auth.css";
+import Axios from "axios";
 
 const Auth = () => {
   const auth = useContext(AuthContext);
@@ -76,20 +77,15 @@ const Auth = () => {
           body,
           headers,
         });
-
         const responseData = await response.json();
-
+        console.log(responseData);
         if (!response.ok) {
-          throw new Error(responseData.message);
+          setError(responseData);
         }
 
         setIsLoading(false);
         return responseData;
-      } catch (err) {
-        setError(err.message);
-        setIsLoading(false);
-        throw err;
-      }
+      } catch (err) {}
     },
     []
   );
@@ -111,21 +107,39 @@ const Auth = () => {
           }
         );
         auth.login(responseData.userId, responseData.token);
-      } catch (err) {}
+      } catch (err) {
+        console.log(err);
+        setError(err.message);
+      }
     } else {
       try {
-        const formData = new FormData();
-        formData.append("email", formState.inputs.email.value);
-        formData.append("name", formState.inputs.name.value);
-        formData.append("password", formState.inputs.password.value);
-        formData.append("image", formState.inputs.image.value);
-        const responseData = await sendRequest(
-          `${process.env.REACT_APP_BACKEND_URL}/api/users/signup`,
-          "POST",
-          formData
-        );
+        //Storing image into s3 bucket
+        const url = await fetch(`${process.env.REACT_APP_BACKEND_URL}/s3Url`, {
+          method: "GET",
+          body: null,
+          headers: {},
+        });
 
-        auth.login(responseData.userId, responseData.token);
+        const responseData1 = await url.json();
+        await fetch(responseData1.url, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          body: formState.inputs.image.value,
+        });
+        const imageUrl = responseData1.url.split("?")[0];
+
+        inputHandler("image", imageUrl, true);
+        console.log(formState.inputs.image.value);
+        Axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/users/signup`, {
+          email: formState.inputs.email.value,
+          name: formState.inputs.name.value,
+          password: formState.inputs.password.value,
+          image: formState.inputs.image.value,
+        }).then((responseData) => {
+          auth.login(responseData.data.userId, responseData.data.token);
+        });
       } catch (err) {}
     }
   };

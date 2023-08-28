@@ -11,6 +11,7 @@ const Users = () => {
   const clearError = () => {
     setError(false);
   };
+  console.log(loadedUsers);
   useEffect(() => {
     const fetchUsers = async () => {
       try {

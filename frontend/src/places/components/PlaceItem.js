@@ -1,22 +1,21 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext } from "react";
 
-import Card from '../../shared/components/UIElements/Card';
-import Button from '../../shared/components/FormElements/Button';
-import Modal from '../../shared/components/UIElements/Modal';
-import Map from '../../shared/components/UIElements/Map';
-import ErrorModal from '../../shared/components/UIElements/ErrorModal';
-import LoadingSpinner from '../../shared/components/UIElements/LoadingSpinner';
-import { AuthContext } from '../../shared/context/auth-context';
-import './PlaceItem.css';
+import Card from "../../shared/components/UIElements/Card";
+import Button from "../../shared/components/FormElements/Button";
+import Modal from "../../shared/components/UIElements/Modal";
+import Map from "../../shared/components/UIElements/Map";
+import ErrorModal from "../../shared/components/UIElements/ErrorModal";
+import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
+import { AuthContext } from "../../shared/context/auth-context";
+import "./PlaceItem.css";
 
-const PlaceItem = props => {
+const PlaceItem = (props) => {
   const auth = useContext(AuthContext);
   const [showMap, setShowMap] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [isLoading,setIsLoading] = useState(false);
-  const [error,setError]=useState(null);
-
-  const clearError=()=>setError(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const clearError = () => setError(null);
 
   const openMapHandler = () => setShowMap(true);
 
@@ -33,13 +32,16 @@ const PlaceItem = props => {
   const confirmDeleteHandler = async () => {
     setShowConfirmModal(false);
     try {
-      const response = await fetch(process.env.REACT_APP_BACKEND_URL+`/api/places/${props.id}`, {
-        method: 'DELETE',
-        body: null,
-        headers: {
-          Authorization: 'Bearer ' + auth.token
-        },
-      });
+      const response = await fetch(
+        process.env.REACT_APP_BACKEND_URL + `/api/places/${props.id}`,
+        {
+          method: "DELETE",
+          body: null,
+          headers: {
+            Authorization: "Bearer " + auth.token,
+          },
+        }
+      );
 
       const responseData = await response.json();
 
@@ -96,10 +98,7 @@ const PlaceItem = props => {
         <Card className="place-item__content">
           {isLoading && <LoadingSpinner asOverlay />}
           <div className="place-item__image">
-            <img
-              src={`${process.env.REACT_APP_BACKEND_URL}/${props.image}`}
-              alt={props.title}
-            />
+            <img src={props.image} alt={props.title} />
           </div>
           <div className="place-item__info">
             <h2>{props.title}</h2>

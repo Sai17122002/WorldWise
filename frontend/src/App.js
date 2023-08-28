@@ -20,7 +20,6 @@ const Auth = React.lazy(() => import("./user/pages/Auth"));
 const App = () => {
   const [token, setToken] = useState(false);
   const [userId, setUserId] = useState(false);
-
   const login = useCallback((uid, token) => {
     setToken(token);
     setUserId(uid);

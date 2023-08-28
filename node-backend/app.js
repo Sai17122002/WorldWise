@@ -1,6 +1,4 @@
-const fs = require("fs");
-const path = require("path");
-
+const generateUploadURL = require("./Util/S3");
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
@@ -12,8 +10,11 @@ const HttpError = require("./models/http-error");
 const app = express();
 
 app.use(bodyParser.json());
-
-app.use("/uploads/images", express.static(path.join("uploads", "images")));
+app.use(
+  bodyParser.urlencoded({
+    extended: true,
+  })
+);
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -26,25 +27,23 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get("/s3Url", async (req, res) => {
+  let url;
+  try {
+    url = await generateUploadURL();
+  } catch (err) {
+    const error = new HttpError("Error from Amazon S3", 404);
+    throw error;
+  }
+  res.json({ url });
+});
+
 app.use("/api/places", placesRoutes);
 app.use("/api/users", usersRoutes);
 
 app.use((req, res, next) => {
   const error = new HttpError("Could not find this route.", 404);
   throw error;
-});
-
-app.use((error, req, res, next) => {
-  if (req.file) {
-    fs.unlink(req.file.path, (err) => {
-      console.log(err);
-    });
-  }
-  if (res.headerSent) {
-    return next(error);
-  }
-  res.status(error.code || 500);
-  res.json({ message: error.message || "An unknown error occurred!" });
 });
 
 mongoose

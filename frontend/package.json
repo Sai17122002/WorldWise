@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "aws-sdk": "^2.1428.0",
+    "axios": "^1.4.0",
     "cors": "^2.8.5",
     "react": "^16.11.0",
     "react-dom": "^16.11.0",

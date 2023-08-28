@@ -12,6 +12,7 @@ import {
 } from "../../shared/util/validators";
 import { useForm } from "../../shared/hooks/form-hook";
 import { AuthContext } from "../../shared/context/auth-context";
+import { Axios } from "axios";
 import "./PlaceForm.css";
 
 const NewPlace = () => {
@@ -48,10 +49,14 @@ const NewPlace = () => {
     async (url, method = "GET", body = null, headers = {}) => {
       setIsLoading(true);
       try {
+        console.log(url,method, body, headers);
+        headers={'Content-Type': 'application/json',...headers}
         const response = await fetch(url, {
-          method,
-          body,
-          headers,
+          method: method,
+          body: JSON.stringify(body),
+          headers: headers,
+          mode: 'cors',
+          cache: 'default',
         });
 
         const responseData = await response.json();
@@ -72,13 +77,34 @@ const NewPlace = () => {
   );
   const placeSubmitHandler = async (event) => {
     event.preventDefault();
+
     try {
-      const formData = new FormData();
-      formData.append("title", formState.inputs.title.value);
-      formData.append("description", formState.inputs.description.value);
-      formData.append("address", formState.inputs.address.value);
-      formData.append("creator", auth.userId);
-      formData.append("image", formState.inputs.image.value);
+      const formData = {
+        title: formState.inputs.title.value,
+        description: formState.inputs.description.value,
+        address: formState.inputs.address.value,
+        image: formState.inputs.image.value,
+        creator: auth.userId
+      };
+      console.log(formData);
+      //Storing image into s3 bucket
+      const url = await fetch(`${process.env.REACT_APP_BACKEND_URL}/s3Url`, {
+        method: "GET",
+        body: null,
+        headers: {},
+      });
+      console.log(formState.inputs.image.value);
+      const responseData1 = await url.json();
+      await fetch(responseData1.url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        body: formState.inputs.image.value,
+      });
+      const imageUrl = responseData1.url.split("?")[0];
+
+      inputHandler("image", imageUrl, true);
       await sendRequest(
         process.env.REACT_APP_BACKEND_URL + "/api/places",
         "POST",

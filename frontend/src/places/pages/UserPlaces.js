@@ -46,7 +46,6 @@ const UserPlaces = () => {
       prevPlaces.filter((place) => place.id !== deletedPlaceId)
     );
   };
-
   return (
     <React.Fragment>
       <ErrorModal error={error} onClear={clearError} />
